@@ -7,7 +7,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -52,15 +55,8 @@ class PostRepositoryTest {
         blogPost2.setTitle("What is Fintech");
         blogPost2.setContent("Lorem opsium");
         log.info("Created a blog post --> {}", blogPost2);
-        postRepository.save(blogPost2);
-        assertThrows(SQLException.class, () -> postRepository.save(blogPost2));
+        assertThrows(DataIntegrityViolationException.class, () -> postRepository.save(blogPost2));
     }
-
-
-
-
-
-
 
     @Test
     void whenPostIsSaved_thenSaveAuthor(){
@@ -83,8 +79,6 @@ class PostRepositoryTest {
         postRepository.save(blogPost);
         log.info("Blog post after saving --> {}", blogPost);
 
-
-
     }
 
     @Test
@@ -95,4 +89,38 @@ class PostRepositoryTest {
         assertThat(existingPosts).hasSize(5);
     }
 
+    @Test
+    @Transactional
+    @Rollback(value = false)
+    void deletePostTest(){
+        Post savedPost = postRepository.findById(41).orElse(null);
+        assertThat(savedPost).isNotNull();
+        System.out.printf("%s is a boy", "john");
+        log.info("Post fetched from the database --> {}", savedPost);
+
+        //delete post
+        postRepository.deleteById(41);
+
+        Post deletedPost = postRepository.findById(41).orElse(null);
+        assertThat(deletedPost).isNull();
     }
+
+
+
+    @Test
+    void toTestThatPostCanUpdate() {
+        Post savedPost = postRepository.findById(42).orElse(null);
+        assertThat(savedPost).isNotNull();
+        String oldTitle = savedPost.getTitle();
+        savedPost.setTitle("New Title");
+        postRepository.save(savedPost);
+        savedPost = postRepository.findById(42).orElse(null);
+        assertThat(savedPost).isNotNull();
+
+        assertNotEquals(oldTitle, savedPost.getTitle());
+    }
+
+    @Test
+    void updatePostAuthorTest(){
+    Post savedPost postRepository.findById(41).orElse()}
+}
